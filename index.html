@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ko">
+    <head>
+        <link href="https://cdn.jsdelivr.net/gh/sunn-us/SUIT/fonts/variable/woff2/SUIT-Variable.css" rel="stylesheet">
+        <style>
+            body {font-family: 'SUIT Variable', sans-serif;}
+        </style>
+
+        <meta property="og:url" content="">
+        <meta property="og:title" content="경산과고 포인트 적립 사이트">
+        <meta property="og:type" content="website">
+        <meta property="og:description" content="개인 QR코드를 생성합니다. 일정 조건을 만족하면 포인트를 적립해줍니다.">
+
+        <meta name="color-scheme" content="light only"/>
+        <meta name="supported-color-schemes" content="light"/>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>TOYOIIL</title>
+        <link rel="stylesheet" href="css/main.css" />
+    </head>
+    <body>
+
+        <script src="https://code.jquery.com/jquery-latest.min.js"></script>
+
+
+        <div id="header">
+            <img src="image/Logo.svg" alt="TOYOIIL">
+            <div id="ip_text_title">경산과학고(117.110)</div>
+            <div></div>
+        </div>
+        <div id="split_column">
+            <div id="main_post" class="main_left_part">
+                <div id="large_title">제목</div>
+                <div id="large_date">0초 전</div>
+                <div id="large_content">본문</div>
+
+                <div id="like_count_post">0</div>
+                <button id="like_this_post" onclick="like_this_post()">좋아요</button>
+                <button id="dislike_this_post" onclick="dislike_this_post()">싫어요</button>
+
+                <input id="input_comment_to_upload" type="text">
+                <button id="button_upload_comment">댓글 올리기</button>
+
+                <div class="comment_list" id="comment_list_div">
+                    <!--
+                    <div class="post">
+                        <div id="small_title">제목2</div>
+                        <div id="small_content">본문2</div>
+                    </div>
+                    -->
+                </div>
+            </div>
+
+            <div id="writePart" class="main_left_part">
+                <div>제목</div>
+                <input id="input_title_to_upload" type="text">
+                <div>본문</div>
+                <textarea id="input_content_to_upload" type="text" onchange="handleResizeHeight()"></textarea>
+                <button id="button_upload_post" onclick="clickPostUploadButton()">글 등록하기</button>
+            </div>
+            
+            <div id="main_right_part">
+                <button id="writeButton" class="right_part_button" onclick="clickWriteButton()">글쓰기</button>
+                <button id="stopWriteButton" class="right_part_button" onclick="clickCloseWriteButton()">닫기</button>
+
+                <div style="margin-left: 4px; margin-top: 20px; margin-bottom: 10px;">인기글🔥</div>
+                <div class="post_list" id="post_list_by_like">
+                    
+                    <!--
+                    <div class="post">
+                        <div id="small_title">제목2</div>
+                        <div id="small_content">본문2</div>
+                    </div>
+                    -->
+                </div>
+
+                <div style="margin-left: 4px; margin-top: 20px; margin-bottom: 10px;">최신글</div>
+                <div class="post_list" id="post_list_div">
+                    
+                    <!--
+                    <div class="post">
+                        <div id="small_title">제목2</div>
+                        <div id="small_content">본문2</div>
+                    </div>
+                    -->
+                </div>
+            </div>
+        </div>
+
+        <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-app.js"></script>
+        <script src = "https://www.gstatic.com/firebasejs/8.6.5/firebase-analytics.js"></script>
+        <script src = "https://www.gstatic.com/firebasejs/8.6.5/firebase-database.js"></script>
+        <script src = "https://www.gstatic.com/firebasejs/8.6.5/firebase-firestore.js"></script>
+        <script src="/js/util.js"></script>
+
+        <script type="text/javascript">
+        /*
+        *파이어 베이스 초기화
+        */
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        const firebaseConfig = {
+            apiKey: "AIzaSyDrv-N1mvRK2K4_SdL3MnLC7PzuMrRQGTA",
+            authDomain: "found-c1aa8.firebaseapp.com",
+            projectId: "found-c1aa8",
+            storageBucket: "found-c1aa8.appspot.com",
+            messagingSenderId: "1093657459998",
+            appId: "1:1093657459998:web:3ed5d5c2d4ba9226c71d0f",
+            measurementId: "G-PYG2DC8T67"
+        };
+    
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        //firebase.getAnalytics(app);
+        </script>
+
+        <script type="text/javascript">
+            const db = firebase.firestore();
+
+        
+            let now_ip;
+
+            var id_check;
+
+            //https://stackoverflow.com/questions/391979/how-to-get-clients-ip-address-using-javascript <== ip주소 얻는 곳
+            $.getJSON('http://www.geoplugin.net/json.gp', function(data) {
+                now_ip = data.geoplugin_request.split(".")[0] + '.' + data.geoplugin_request.split(".")[1];
+                console.log(now_ip);
+                if(now_ip == '117.110') {
+                    document.getElementById('ip_text_title').innerText = '경산과학고 ' + now_ip;
+                } else {
+                    document.getElementById('ip_text_title').innerText = now_ip;
+                }
+                start_function();
+                readDataAndResetPostList();
+            });
+
+            function start_function() {
+            //메인 게시글 적기
+            db.collection('board') //원하는 컬렉션 선택하기, 지금은 product를 선택함
+                .doc(now_ip) //원하는 도큐먼트 선택하기
+                .collection('post') 
+                .orderBy('like', "desc") //정렬방식 최신자료 먼저 정렬 가능함
+                .limit(1) //가지고 오는 갯수를 제한 할 수 있다.
+                .get() //이제까지 정보를 통해 자료를 가져오라는 의미
+                .then((doc) => { // 결과를 then으로 받을 수 있다.   
+                    doc.forEach((result)=>{
+                        id_check = result.id; 
+                        document.getElementById("large_title").innerText = result.data().title;
+                        document.getElementById("large_content").innerText = result.data().content;
+                        document.getElementById("large_date").innerText = calculate_date(new Date(result.data().date))
+                        document.getElementById("like_count_post").innerText = result.data().like;
+                        
+                        //메인 게시글 댓글 적기
+                        db.collection('board') //원하는 컬렉션 선택하기, 지금은 product를 선택함
+                            .doc(now_ip) //원하는 도큐먼트 선택하기
+                            .collection('post') 
+                            .doc(result.id)
+                            .collection('comment')
+                            .orderBy('date', "desc") //정렬방식 최신자료 먼저 정렬 가능함
+                            .get() //이제까지 정보를 통해 자료를 가져오라는 의미
+                            .then((comment_doc) => { // 결과를 then으로 받을 수 있다.  
+                                comment_doc.forEach((comment_result)=>{
+                                        const parent = document.createElement('div');
+                                        //parent.className = "post";
+                                        parent.id = comment_result.id
+                                        const div_content_element = document.createElement("div");
+                                        div_content_element.innerText = comment_result.data().content;
+                                        div_content_element.id ="comment_content";
+                                        const div_date_element = document.createElement("div");
+                                        div_date_element.innerText = calculate_date(new Date(comment_result.data().date));
+                                        div_date_element.id = "comment_date";
+                                        parent.appendChild(div_date_element);
+                                        parent.appendChild(div_content_element);
+                                        document.getElementById("comment_list_div").appendChild(parent);
+                                })    
+                            });
+
+
+                    })    
+                });
+            }
+
+            function readDataAndResetPostList() {
+                //리스트에 게시글 리스트 추가
+                db.collection('board') //원하는 컬렉션 선택하기, 지금은 product를 선택함
+                    .doc(now_ip) //원하는 도큐먼트 선택하기
+                    .collection('post') 
+                    .orderBy('like', "desc") //정렬방식 최신자료 먼저 정렬 가능함
+                    .limit(3) //가지고 오는 갯수를 제한 할 수 있다.
+                    .get() //이제까지 정보를 통해 자료를 가져오라는 의미
+                    .then((doc) => { // 결과를 then으로 받을 수 있다.
+                        doc.forEach((result)=>{
+                            create_post_list(result, "post_list_by_like");
+                        })    
+                    });
+
+                //리스트에 게시글 리스트 추가
+                db.collection('board') //원하는 컬렉션 선택하기, 지금은 product를 선택함
+                    .doc(now_ip) //원하는 도큐먼트 선택하기
+                    .collection('post') 
+                    .orderBy('date', "desc") //정렬방식 최신자료 먼저 정렬 가능함
+                    .get() //이제까지 정보를 통해 자료를 가져오라는 의미
+                    .then((doc) => { // 결과를 then으로 받을 수 있다.
+                        doc.forEach((result)=>{
+                            create_post_list(result, "post_list_div");
+                        })    
+                    });
+            }
+
+            function readDataAndResetPostListNumberOfLimit(limit) {
+                //리스트에 게시글 리스트 추가
+                db.collection('board') //원하는 컬렉션 선택하기, 지금은 product를 선택함
+                    .doc(now_ip) //원하는 도큐먼트 선택하기
+                    .collection('post') 
+                    .orderBy('date', "desc") //정렬방식 최신자료 먼저 정렬 가능함
+                    .limit(limit) //가지고 오는 갯수를 제한 할 수 있다.
+                    .get() //이제까지 정보를 통해 자료를 가져오라는 의미
+                    .then((doc) => { // 결과를 then으로 받을 수 있다.
+                        doc.forEach((result)=>{
+                            create_post_list(result, "post_list_div");
+                        })    
+                    });
+            }
+
+            function getPostContent(id) {
+                db.collection('board') //원하는 컬렉션 선택하기, 지금은 product를 선택함
+                .doc(now_ip) //원하는 도큐먼트 선택하기
+                .collection('post') 
+                .doc(id) 
+                //.orderBy('date', "desc") //정렬방식 최신자료 먼저 정렬 가능함
+                //.limit(1) //가지고 오는 갯수를 제한 할 수 있다.
+                .get() //이제까지 정보를 통해 자료를 가져오라는 의미
+                .then((doc) => { // 결과를 then으로 받을 수 있다.  
+                    document.getElementById("large_title").innerText = doc.data().title;
+                    document.getElementById("large_content").innerText = doc.data().content;
+                    document.getElementById("large_date").innerText = calculate_date(new Date(doc.data().date));
+                    document.getElementById("like_count_post").innerText = doc.data().like;
+                });
+
+                document.getElementById("comment_list_div").replaceChildren();
+
+                console.log("클릭");
+                
+                db.collection('board') //원하는 컬렉션 선택하기, 지금은 product를 선택함
+                    .doc(now_ip) //원하는 도큐먼트 선택하기
+                    .collection('post') 
+                    .doc(id) 
+                    .collection('comment')
+                    .orderBy('date', "desc") //정렬방식 최신자료 먼저 정렬 가능함
+                    //.limit(1) //가지고 오는 갯수를 제한 할 수 있다.
+                    .get() //이제까지 정보를 통해 자료를 가져오라는 의미
+                    .then((doc) => { // 결과를 then으로 받을 수 있다.
+                        doc.forEach((result)=>{
+                        //메인 게시글 댓글 적기
+                        db.collection('board') //원하는 컬렉션 선택하기, 지금은 product를 선택함
+                            .doc(now_ip) //원하는 도큐먼트 선택하기
+                            .collection('post') 
+                            .doc(id)
+                            .collection('comment')
+                            .orderBy('date', "desc") //정렬방식 최신자료 먼저 정렬 가능함
+                            .get() //이제까지 정보를 통해 자료를 가져오라는 의미
+                            .then((comment_doc) => { // 결과를 then으로 받을 수 있다.  
+                                comment_doc.forEach((comment_result)=>{
+                                        const parent = document.createElement('div');
+                                        //parent.className = "post";
+                                        parent.id = result.id
+                                        const div_content_element = document.createElement("div");
+                                        div_content_element.innerText = comment_result.data().content;
+                                        div_content_element.id ="comment_content";
+                                        const div_date_element = document.createElement("div");
+                                        div_date_element.innerText = calculate_date(new Date(comment_result.data().date));
+                                        div_date_element.id = "comment_date";
+                                        parent.appendChild(div_date_element);
+                                        parent.appendChild(div_content_element);
+                                        document.getElementById("comment_list_div").appendChild(parent);
+                                })    
+                            });
+                        })    
+                    });
+            }
+
+            function clickPostUploadButton() {
+                db.collection('board')
+                .doc(now_ip) //원하는 도큐먼트 선택하기
+                .collection('post')
+                .add({
+                    title : document.getElementById("input_title_to_upload").value,
+                    content : document.getElementById("input_content_to_upload").value,
+                    date : Date.now(),
+                    like :  0
+                })
+                readDataAndResetPostListNumberOfLimit(1);
+                clickCloseWriteButton();
+            }
+
+            function clickCommentUploadButton(id) {
+                db.collection('board')
+                .doc(now_ip) //원하는 도큐먼트 선택하기
+                .collection('post')
+                .doc(id)
+                .collection('comment')
+                .add({
+                    content : document.getElementById("input_comment_to_upload").value,
+                    date : Date.now()
+                })
+
+                
+                document.getElementById("input_comment_to_upload").value=null;
+                        
+                //메인 게시글 댓글 적기
+                db.collection('board') //원하는 컬렉션 선택하기, 지금은 product를 선택함
+                    .doc(now_ip) //원하는 도큐먼트 선택하기
+                    .collection('post') 
+                    .doc(id)
+                    .collection('comment')
+                    .orderBy('date', "desc") //정렬방식 최신자료 먼저 정렬 가능함
+                    .limit(1)
+                    .get() //이제까지 정보를 통해 자료를 가져오라는 의미
+                    .then((comment_doc) => { // 결과를 then으로 받을 수 있다.  
+                        comment_doc.forEach((comment_result)=>{
+                                const parent = document.createElement('div');
+                                //parent.className = "post";
+                                parent.id = comment_result.id
+                                const div_content_element = document.createElement("div");
+                                div_content_element.innerText = comment_result.data().content;
+                                div_content_element.id ="comment_content";
+                                const div_date_element = document.createElement("div");
+                                div_date_element.innerText = calculate_date(new Date(comment_result.data().date));
+                                div_date_element.id = "comment_date";
+                                parent.appendChild(div_date_element);
+                                parent.appendChild(div_content_element);
+                                document.getElementById("comment_list_div").prepend(parent);
+                        })    
+                    });
+
+                
+                //중복 클릭 방지
+                var vm = document.getElementById('button_upload_comment');
+                vm.setAttribute("disabled", "disabled");
+
+                setTimeout(function () {
+                    vm.removeAttribute("disabled")
+                }, 1000)
+            }
+
+            function clickWriteButton() {
+                //글 확인 부분 없앰, 글 쓰기 부분 생기게함
+                document.getElementById("main_post").style.display = "none";
+                document.getElementById("writePart").style.display = "flex";
+
+                document.getElementById("writeButton").style.display = "none";
+                document.getElementById("stopWriteButton").style.display = "block";
+            }
+
+            function clickCloseWriteButton() {
+                //글 확인 부분 생기게함, 글 쓰기 부분 없앰
+                document.getElementById("main_post").style.display = "block";
+                document.getElementById("writePart").style.display = "none";
+
+                document.getElementById("writeButton").style.display = "flex";
+                document.getElementById("stopWriteButton").style.display = "none";
+            }
+
+            //좋아요 버튼 눌렀을 때
+            function like_this_post() {
+                db.collection('board') //원하는 컬렉션 선택하기, 지금은 product를 선택함
+                .doc(now_ip) //원하는 도큐먼트 선택하기
+                .collection('post') 
+                .doc(id_check) 
+                //.orderBy('date', "desc") //정렬방식 최신자료 먼저 정렬 가능함
+                //.limit(1) //가지고 오는 갯수를 제한 할 수 있다.
+                .get() //이제까지 정보를 통해 자료를 가져오라는 의미
+                .then((doc) => { // 결과를 then으로 받을 수 있다.  
+                    db.collection('board')
+                        .doc(now_ip) //원하는 도큐먼트 선택하기
+                        .collection('post')
+                        .doc(id_check)
+                        .update({like: doc.data().like+1});
+                        document.getElementById("like_count_post").innerText = Number(document.getElementById("like_count_post").innerText)+1;
+                });
+                
+                //중복 클릭 방지
+                var vm = document.getElementById('like_this_post');
+                var vm2 = document.getElementById('dislike_this_post');
+                vm.setAttribute("disabled", "disabled");
+                vm2.setAttribute("disabled", "disabled");
+
+                setTimeout(function () {
+                    vm.removeAttribute("disabled")
+                    vm2.removeAttribute("disabled")
+                }, 5000)
+            }
+
+            //싫어요 버튼 눌렀을 때
+            function dislike_this_post() {
+                db.collection('board') //원하는 컬렉션 선택하기, 지금은 product를 선택함
+                .doc(now_ip) //원하는 도큐먼트 선택하기
+                .collection('post') 
+                .doc(id_check) 
+                //.orderBy('date', "desc") //정렬방식 최신자료 먼저 정렬 가능함
+                //.limit(1) //가지고 오는 갯수를 제한 할 수 있다.
+                .get() //이제까지 정보를 통해 자료를 가져오라는 의미
+                .then((doc) => { // 결과를 then으로 받을 수 있다. 
+                    db.collection('board')
+                        .doc(now_ip) //원하는 도큐먼트 선택하기
+                        .collection('post')
+                        .doc(id_check)
+                        .update({like: doc.data().like-1});
+                        document.getElementById("like_count_post").innerText = Number(document.getElementById("like_count_post").innerText)-1;
+                });
+                
+                //중복 클릭 방지
+                var vm = document.getElementById('like_this_post');
+                var vm2 = document.getElementById('dislike_this_post');
+                vm.setAttribute("disabled", "disabled");
+                vm2.setAttribute("disabled", "disabled");
+
+                setTimeout(function () {
+                    vm.removeAttribute("disabled")
+                    vm2.removeAttribute("disabled")
+                }, 5000)
+            }
+
+            const handleResizeHeight = () => {
+                document.getElementById('input_content_to_upload').current.style.height = 'auto'; //height 초기화
+                document.getElementById('input_content_to_upload').current.style.height = textarea.current.scrollHeight + 'px';
+            };
+
+
+            //게시글 리스트 요소 클릭했을때 그 게시글로 이동
+            $(document).on('click', '.post', function(e){
+                id_check = $(this).attr("id");
+                getPostContent(id_check);
+
+                /*
+                var link = '/html/post.html?'+'now_ip'+'?'+id_check;
+
+                location.href=link;
+                //location.replace(link);
+                window.open(link);
+                */
+            });
+
+            //댓글 쓰기 버튼 클릭했을 때
+            $(document).on('click', '#button_upload_comment', function(e){
+                clickCommentUploadButton(id_check);
+
+                /*
+                var link = '/html/post.html?'+'now_ip'+'?'+id_check;
+
+                location.href=link;
+                //location.replace(link);
+                window.open(link);
+                */
+            });
+        </script>
+    </body>
+</html>

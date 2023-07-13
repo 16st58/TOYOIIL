@@ -1,0 +1,216 @@
+body {
+    background-color: var(--bg-page1);
+
+    
+    --bg-page1: #F8F9FA;
+    --bg-page2: #FFFFFF;
+    --bg-element1: #FFFFFF;
+    --bg-element2: #F8F9FA;
+    --bg-element3: #E9ECEF;
+    --bg-element4: #DEE2E6;
+    --bg-element5: #212529;
+    --bg-element6: #343A40;
+    --bg-element7: #FFFFFF;
+    --bg-element8: #FBFDFC;
+    --bg-invert: #1E1E1E;
+    --bg-inline-code: #E9ECEF;
+    --bg-tag: #F8F9FA;
+    --text1: #212529;
+    --text2: #495057;
+    --text3: #868E96;
+    --text4: #CED4DA;
+    --border1: #343A40;
+    --border2: #ADB5BD;
+    --border3: #DEE2E6;
+    --border4: #F1F3F5;
+    --primary1: #12B886;
+    --primary2: #20C997;
+    --destructive1: #FF6B6B;
+    --destructive2: #FF8787;
+    --button-text: #FFFFFF;
+    --slight-layer: rgba(0,0,0,0.05);
+    --opaque-layer: rgba(249,249,249,0.85);
+    --editor-footer: #FFFFFF;
+    --prism-bg: #fbfcfd;
+    --prism-default-text: #24292e;
+    --prism-selection-bg: rgba(0,0,0,0.15);
+    --prism-code-block-bg: #fbfcfd;
+    --prism-code-1: #969896;
+    --prism-code-2: #24292e;
+    --prism-code-3: #a626a4;
+    --prism-code-4: #63a35c;
+    --prism-code-5: #0184bc;
+    --prism-code-6: #50a14f;
+    --prism-code-7: #a626a4;
+    --prism-code-8: #005cc5;
+    --prism-code-9: #a626a4;
+    --prism-code-10: #e23636;
+    --prism-line-number: #585c63;
+}
+
+* { 
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+#header {
+    position: fixed;
+    width: 100%;
+    height: 60px;
+    top: 0px;
+    background-color: var(--bg-element2);
+    display: flex;
+    -webkit-box-align: center;
+    align-items: center;
+    -webkit-box-pack: justify;
+    justify-content: space-around;
+}
+
+#ip_text_title {
+    font-size: large;
+}
+
+#split_column{
+    margin-top: 60px;
+    display: flex;
+    justify-content: space-between;
+}
+
+#main_post{
+    display: block;
+    word-break:break-all;
+}
+
+#writePart {
+    display: none;
+    flex-direction: column
+}
+
+#large_title{
+    font-size: 2.25rem;
+    line-height: 1.5;
+    letter-spacing: -0.004em;
+    margin-top: 0px;
+    font-weight: 800;
+    color: var(--text1);
+    margin-bottom: 2rem;
+    transition: color 0.125s ease-in 0s;
+    overflow-wrap: break-word;
+}
+
+#large_content {
+    font-size: 1rem;
+    color: var(--text1);
+    transition: color 0.125s ease-in 0s;
+    line-height: 1.7;
+    letter-spacing: -0.004em;
+    overflow-wrap: break-word;
+    white-space: normal;
+    word-wrap: break-word;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+}
+
+.post {
+    padding: 20px;
+    cursor: pointer;
+    background-color: var(--bg-page2);
+    border-bottom: 1px solid var(--border3);
+}
+
+#writeButton{
+    display: block;
+    background-color: var(--prism-code-8);
+    color: var(--button-text);
+    padding: 10px;
+    border-radius: 10px;
+}
+
+#stopWriteButton{
+    display: none;
+    background-color: var(--prism-code-10);
+    color: var(--button-text);
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.right_part_button {
+    width: 300px;
+    border: none;
+    cursor: pointer;
+}
+
+#main_right_part {
+    width: 300px;
+	flex-shrink: 0;
+    height: 100vh;
+}
+
+#post_list_div {
+    overflow-x:hidden;
+    height: fit-content;
+    display: block;
+}
+
+#post_list_by_like {
+    display: block;
+}
+
+.post_list {
+    border-radius: 20px;
+}
+
+.main_left_part{
+	flex-grow: 1;
+    background-color: var(--bg-page2);
+    border-radius: 10px;
+    padding: 40px;
+    margin-right: 20px;
+}
+
+#button_upload_post {
+    background-color: var(--prism-code-8);
+    color: var(--button-text);
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+}
+
+.writepart_introduce {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+#input_content_to_upload {
+    
+    border: none;
+    resize: none;
+}
+
+
+#small_title {
+    font-size: 1rem;
+    margin: 0px 0px 0.25rem;
+    line-height: 1.5;
+    word-break: break-word;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    color: var(--text1);
+    -webkit-line-clamp: 1;
+}
+
+#small_content {
+    word-break: break-word;
+    overflow-wrap: break-word;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text2);
+    display: -webkit-box;
+}
